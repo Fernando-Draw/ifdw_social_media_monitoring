@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Estilos personalizado para encabezado de lista -->
+    <template id="assets_backend" name="Estilo encabezado de lista" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <style>
+                .o_list_view .header_tree_style th {
+                    font-weight: 800;
+                }
+            </style>
+        </xpath>
+    </template>
+</odoo>

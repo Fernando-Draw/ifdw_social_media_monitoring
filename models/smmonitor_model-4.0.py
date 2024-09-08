@@ -1,9 +1,8 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from odoo.http import request
-#from .smmonitor_model_project_task_hashtags import SmmonitorProjectTaskHashtags
 from datetime import datetime, timedelta
-from pytz import timezone
+from pytz import timezone, utc
 
 class SmmonitorTaskAnalytics(models.Model):
     _name = 'project.task.smmonitor'
@@ -11,7 +10,7 @@ class SmmonitorTaskAnalytics(models.Model):
     
     # Campos principales del módulo IfDw Social Media Monitoring
     smmonitor_task_id = fields.Many2one('project.task', string='Titulo', required=True, ondelete='cascade')
-    datetakesdata = fields.Date(string='Fecha de registro', required=True)
+    datetakesdata = fields.Date(string='Fecha de registro', required=True)  # Quitamos default aquí.
     engagement = fields.Float(string='Vinculación % (Egagmt)', compute='_compute_smmonitor_engagement',digits=(6,2), store=True)
     interactions = fields.Integer(string='Interacciones (CTR)', store=True)
     reach = fields.Integer(string='Alcance', store=True)
@@ -67,33 +66,33 @@ class SmmonitorTaskAnalytics(models.Model):
                 raise ValidationError("La fecha no puede ser posterior al día de hoy.")
             if record.datetakesdata < today - timedelta(days=365):
                 raise ValidationError("La fecha no puede ser anterior a un año desde hoy.")
-            if record.engagement <= -1 or record.engagement > 999999.99:
+            if record.engagement < 0 or record.engagement > 999999.99:
                 raise ValidationError("La vinculación debe estar entre 0% y 999999.99%.")
-            if record.reach <= -1:
+            if record.reach < 0:
                 raise ValidationError("El alcance no puede ser negativo.")
-            if record.interactions <= -1:
+            if record.interactions < 0:
                 raise ValidationError("Las interacciones no pueden ser negativas.")
-            if record.impressions <= -1:
+            if record.impressions < 0:
                 raise ValidationError("Las impresiones no pueden ser negativas.")
 
-    @api.constrains('datetakesdata')
-    def _check_unique_per_day(self):
+    @api.constrains('engagement', 'reach', 'interactions', 'impressions')
+    def _check_not_all_zero(self):
         for record in self:
-            existing_records = self.env['project.task.smmonitor'].search([
-                ('datetakesdata', '>=', record.datetakesdata.strftime('%Y-%m-%d')),
-                ('datetakesdata', '<', (record.datetakesdata + timedelta(days=1)).strftime('%Y-%m-%d')),
-                ('smmonitor_task_id', '=', record.smmonitor_task_id.id)
-            ])
-            if existing_records and existing_records != record:
-                raise ValidationError("Ya existe un registro para el día seleccionado, no se permite la creación de 2 registros en el mismo día, para evitar sobresaturación de datos")
+            if record.engagement == 0 and record.reach == 0 and record.interactions == 0 and record.impressions == 0:
+                raise ValidationError("Al menos uno de los valores analíticos debe ser distinto de cero.")
 
 class SmmonitorProjectTask(models.Model):
     _inherit = 'project.task'
     _description = 'Tareas de proyectos, personalización para S.M. Monitor'
 
+    def save_tz_offset(self, offset, timezone):
+        # Guardamos el offset y la zona horaria en el usuario actual
+        self.env.user.tz_offset = int(offset)
+        self.env.user.tz = timezone
+
     smmonitor_tabs = fields.One2many('project.task.smmonitor', 'smmonitor_task_id', string='Titulo/Publicación')
-    #smmonitor_hashtag_ids = fields.Many2many('project.task.hashtags.smmonitor', string='Hashtags RR.SS.')
     temp_datetakesdata = fields.Date(string='Fecha de registro', default=fields.Date.context_today)
+    temp_engagement = fields.Float(string='Vinculación % (Egagmt)', digits=(6,2), default=0)
     temp_interactions = fields.Integer(string='Interacciones (CTR)', default=0)
     temp_reach = fields.Integer(string='Alcance', default=0)
     temp_impressions = fields.Integer(string='Impresiones', default=0)
@@ -112,35 +111,6 @@ class SmmonitorProjectTask(models.Model):
     latestdata_interactions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Interacciones')
     latestdata_reach = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Alcance')
     latestdata_impressions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Impresiones')
-
-    def save_tz_offset(self, offset, timezone):
-        # Guardamos el offset y la zona horaria en el usuario actual
-        self.env.user.tz_offset = int(offset)
-        self.env.user.tz = timezone
-
-    # Método para generar hashtags en el formato adecuado
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.client',
-    #        'tag': 'copy_hashtags_action',
-    #        'params': {
-    #            'hashtags': hashtag_text
-    #        }
-    #    }
-
-    # ANULADO HASTA VERIFICAR FUNCIONAMIENTO DE JS - Método para copiar hashtags
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.act_url',
-    #        'url': 'data:text/plain;charset=utf-8,' + urllib.parse.quote(hashtag_text),
-    #        'target': 'new',
-    #    }
 
     # Ordena por fecha lista de registros indicando cual es el primer registro y el último registro. Además si no hay registros, los deja en valor "0" o "False"
     @api.depends('smmonitor_tabs.datetakesdata', 'smmonitor_tabs.engagement', 'smmonitor_tabs.reach', 'smmonitor_tabs.interactions', 'smmonitor_tabs.impressions')
@@ -365,10 +335,11 @@ class SmmonitorProjectTask(models.Model):
         for task in self:
             task.analytics_count = len(task.smmonitor_tabs)
 
-    @api.depends('temp_interactions', 'temp_reach', 'temp_impressions')
+    @api.depends('temp_engagement', 'temp_interactions', 'temp_reach', 'temp_impressions')
     def _compute_can_add_analytics(self):
         for task in self:
             task.can_add_analytics = any([
+                task.temp_engagement != 0,
                 task.temp_interactions != 0,
                 task.temp_reach != 0,
                 task.temp_impressions != 0
@@ -384,7 +355,7 @@ class SmmonitorProjectTask(models.Model):
             task.latest_reach = latest_record.reach if latest_record else 0
             task.latest_impressions = latest_record.impressions if latest_record else 0
 
-    @api.constrains('temp_datetakesdata', 'temp_interactions', 'temp_reach', 'temp_impressions')
+    @api.constrains('temp_datetakesdata', 'temp_engagement', 'temp_interactions', 'temp_reach', 'temp_impressions')
     def _check_temp_values(self):
         for task in self:
             tz_offset = int(self.env.user.tz_offset or 0)  # Obtenemos el offset desde el usuario y aseguramos de convertir a entero
@@ -394,11 +365,13 @@ class SmmonitorProjectTask(models.Model):
                 raise ValidationError("La fecha no puede ser posterior al día de hoy.")
             if task.temp_datetakesdata < today - timedelta(days=365):
                 raise ValidationError("La fecha no puede ser anterior a un año desde hoy.")
-            if task.temp_interactions <= -1:
+            if task.temp_engagement < 0 or task.temp_engagement > 999999.99:
+                raise ValidationError("La vinculación debe estar entre 0% y 999999.99%.")
+            if task.temp_interactions < 0:
                 raise ValidationError("Las interacciones no pueden ser negativas.")
-            if task.temp_reach <= -1:
+            if task.temp_reach < 0:
                 raise ValidationError("El alcance no puede ser negativo.")
-            if task.temp_impressions <= -1:
+            if task.temp_impressions < 0:
                 raise ValidationError("Las impresiones no pueden ser negativas.")
 
     def action_add_analytics(self):
@@ -407,12 +380,14 @@ class SmmonitorProjectTask(models.Model):
             self.env['project.task.smmonitor'].create({
                 'smmonitor_task_id': self.id,
                 'datetakesdata': self.temp_datetakesdata,
+                'engagement': self.temp_engagement,
                 'interactions': self.temp_interactions,
                 'reach': self.temp_reach,
                 'impressions': self.temp_impressions,
             })
             self.sudo().write({
                 'temp_datetakesdata': fields.Date.context_today(self),
+                'temp_engagement': 0,
                 'temp_interactions': 0,
                 'temp_reach': 0,
                 'temp_impressions': 0,

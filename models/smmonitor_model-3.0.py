@@ -1,104 +1,103 @@
+##########################################################################################################################################################
+#
+#    Infinity Draw.
+#
+#    Copyright (C) 2024-HOY Infinity Draw (<https://infinitydraw.es>)
+#    Autor: Fernan Nerd (<https://infinitydraw.es>)
+#
+#    Puedes modificarlo bajo los términos de GNU LESSER.
+#    LICENCIA PÚBLICA GENERAL (LGPL v3), Versión 3.
+#
+#    Este programa se distribuye con la esperanza de que sea útil,
+#    pero SIN NINGUNA GARANTÍA; sin siquiera la garantía implícita de
+#    COMERCIABILIDAD o IDONEIDAD PARA UN PROPÓSITO PARTICULAR.  Ver el
+#    LICENCIA PÚBLICA GENERAL MENOR GNU (LGPL v3) para más detalles.
+#
+#    Debería haber recibido una copia de la LICENCIA PÚBLICA GENERAL MENOR DE GNU
+#    (LGPL v3) junto con este programa.
+#    En caso contrario, consulte <http://www.gnu.org/licenses/>.
+#
+##########################################################################################################################################################
+#
+#       Los principales archivos del módulo son __manifest__-1.8.py, timezone_detector-1.3.js (con cookie) y
+#       timezone_detector-1.4.js (con metodo de odoo) incluyen el para detectar la hora del usuario local.
+#       El metodo de la cookie NO funcione correctamente en el navegador, pero si como módulo como tal.
+#       El metodo de odoo funciona funciona correctamente tanto en el navegador como el módulo como tal.
+#       El archivo smmonitor_views.3.0.xml (con cookie) para las vistas y el archivo smmonitor_views.3.1.xml (con metodo Odoo)
+#       para las vistas, donde en este caso anulamos el campo 'user_timezone_offset' ya que deja de ser necesario.
+#       El archivo de python smmonitor_model-3.0.py (con cookie) y el mismo terminado en 3.1.py (con metodo odoo) son los
+#       que incluyen toda la lógica del módulo para hacer que todo se cree correctamente, siempre teniendo en cuenta lo que
+#       hemos comentado y es que el metodo de la cookie no termina de funcionar ocasionando un error en el navegador web aunque
+#       si funciona el módulo como tal, y el metodo que odoo recomienda implementar funciona correctamente en todos los sentidos,
+#       teniendo en cuenta que en este metodo se quita el campo 'user_timezone_offset' ya que deja de ser necesario.
+#
+##########################################################################################################################################################
+
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from odoo.http import request
-#from .smmonitor_model_project_task_hashtags import SmmonitorProjectTaskHashtags
 from datetime import datetime, timedelta
-from pytz import timezone
+from pytz import timezone, utc
 
 class SmmonitorTaskAnalytics(models.Model):
     _name = 'project.task.smmonitor'
     _description = 'Lista de registros guardados para la tarea actual desde la cual se calculan la grán mayoría del resto de valores del módulo'
-    
-    # Campos principales del módulo IfDw Social Media Monitoring
-    smmonitor_task_id = fields.Many2one('project.task', string='Titulo', required=True, ondelete='cascade')
-    datetakesdata = fields.Date(string='Fecha de registro', required=True)
-    engagement = fields.Float(string='Vinculación % (Egagmt)', compute='_compute_smmonitor_engagement',digits=(6,2), store=True)
-    interactions = fields.Integer(string='Interacciones (CTR)', store=True)
-    reach = fields.Integer(string='Alcance', store=True)
-    impressions = fields.Integer(string='Impresiones', store=True)
-    # Campos principales del módulo Proyectos vinculados aquí, para trabajar con ellos en las vistas personalizadas
-    name = fields.Char(related='smmonitor_task_id.name', string='Titulo', store=True)
-    message_is_follower = fields.Boolean(related='smmonitor_task_id.message_is_follower', string='Seguida', store=True)
-    stage_id = fields.Many2one(related='smmonitor_task_id.stage_id', string='Etapas', store=True)
-    milestone_id = fields.Many2one(related='smmonitor_task_id.milestone_id', string='Hitos', store=True)
-    partner_id = fields.Many2one(related='smmonitor_task_id.partner_id', string='Cliente', store=True)
-    state = fields.Selection(related='smmonitor_task_id.state', string='Estado', store=True)
-    priority = fields.Selection(related='smmonitor_task_id.priority', string='Prioridad', store=True)
-    date_last_stage_update = fields.Datetime(related='smmonitor_task_id.date_last_stage_update', string='Última actualización de etapa', store=True)
-    active = fields.Boolean(related='smmonitor_task_id.active', string='Activo', store=True)
-    company_id = fields.Many2one(related='smmonitor_task_id.company_id', string='Compañia', store=True)
-    date_assign = fields.Datetime(related='smmonitor_task_id.date_assign', string='Fecha de Asignación', store=True)
-    # Campos principales del módulo Proyectos vinculados aquí, para trabajar con ellos en las vistas personalizadas
-    # Campos de acceso especial para poder trabajar con ellos dadas sus caracteristicas
-    user_ids = fields.Many2many('res.users', compute='_compute_smmonitor_user_ids', string="Asignados", store=True)
+
+    smmonitor_task_id = fields.Many2one('project.task', string='Tabla valores', required=True, ondelete='cascade')
+    datetakesdata = fields.Date(string='Fecha de registro', required=True)  # Quitamos default aquí.
+    engagement = fields.Float(string='Vinculación % (Egagmt)', digits=(6,2))
+    interactions = fields.Integer(string='Interacciones (CTR)')
+    reach = fields.Integer(string='Alcance')
+    impressions = fields.Integer(string='Impresiones')
 
     @api.model
-    def save_tz_offset(self, offset, timezone):
-        # Guardamos el offset y la zona horaria en el usuario actual
-        self.env.user.tz_offset = int(offset)
-        self.env.user.tz = timezone
-
-    @api.depends('interactions', 'reach', 'smmonitor_task_id.project_id.engagement_normalization')
-    def _compute_smmonitor_engagement(self):
-        for record in self:
-            if record.reach and record.interactions:
-                # Accedemos al project_id a través de smmonitor_task_id.project_id sin tener que crear el campo projet_id
-                project = record.smmonitor_task_id.project_id
-                if project:
-                    engagement_normalization_value = float(project.engagement_normalization or 100)
-                    record.engagement = (record.interactions * record.reach) / engagement_normalization_value
-                else:
-                    record.engagement = 0.0
-            else:
-                record.engagement = 0.0
-
-    @api.depends('smmonitor_task_id')
-    def _compute_smmonitor_user_ids(self):
-        for record in self:
-            record.user_ids = record.smmonitor_task_id.user_ids
+    def save_tz_offset(self, offset):
+        # Guardamos el offset en el usuario actual en lugar de un parámetro global
+        self.env.user.tz_offset = offset
 
     @api.constrains('datetakesdata', 'engagement', 'reach', 'interactions', 'impressions')
     def _check_values(self):
         for record in self:
-            tz_offset = int(self.env.user.tz_offset or 0)  # Obtenemos el offset desde el usuario y aseguramos de convertir a entero
+
+            # Obtener el desplazamiento de la cookie
+            tz_offset = int(request.httprequest.cookies.get('tz_offset', 0))
             today = fields.Date.context_today(record) - timedelta(minutes=tz_offset)
             
             if record.datetakesdata > today:
                 raise ValidationError("La fecha no puede ser posterior al día de hoy.")
             if record.datetakesdata < today - timedelta(days=365):
                 raise ValidationError("La fecha no puede ser anterior a un año desde hoy.")
-            if record.engagement <= -1 or record.engagement > 999999.99:
-                raise ValidationError("La vinculación debe estar entre 0% y 999999.99%.")
-            if record.reach <= -1:
+            if record.engagement < 0 or record.engagement > 9999.99:
+                raise ValidationError("La vinculación debe estar entre 0% y 9999.99%.")
+            if record.reach < 0:
                 raise ValidationError("El alcance no puede ser negativo.")
-            if record.interactions <= -1:
+            if record.interactions < 0:
                 raise ValidationError("Las interacciones no pueden ser negativas.")
-            if record.impressions <= -1:
+            if record.impressions < 0:
                 raise ValidationError("Las impresiones no pueden ser negativas.")
 
-    @api.constrains('datetakesdata')
-    def _check_unique_per_day(self):
+    @api.constrains('engagement', 'reach', 'interactions', 'impressions')
+    def _check_not_all_zero(self):
         for record in self:
-            existing_records = self.env['project.task.smmonitor'].search([
-                ('datetakesdata', '>=', record.datetakesdata.strftime('%Y-%m-%d')),
-                ('datetakesdata', '<', (record.datetakesdata + timedelta(days=1)).strftime('%Y-%m-%d')),
-                ('smmonitor_task_id', '=', record.smmonitor_task_id.id)
-            ])
-            if existing_records and existing_records != record:
-                raise ValidationError("Ya existe un registro para el día seleccionado, no se permite la creación de 2 registros en el mismo día, para evitar sobresaturación de datos")
+            if record.engagement == 0 and record.reach == 0 and record.interactions == 0 and record.impressions == 0:
+                raise ValidationError("Al menos uno de los valores analíticos debe ser distinto de cero.")
 
 class SmmonitorProjectTask(models.Model):
     _inherit = 'project.task'
     _description = 'Tareas de proyectos, personalización para S.M. Monitor'
 
-    smmonitor_tabs = fields.One2many('project.task.smmonitor', 'smmonitor_task_id', string='Titulo/Publicación')
-    #smmonitor_hashtag_ids = fields.Many2many('project.task.hashtags.smmonitor', string='Hashtags RR.SS.')
+    def save_tz_offset(self, offset):
+        # Guardamos el offset en el usuario actual
+        self.env.user.tz_offset = offset
+
+    smmonitor_tabs = fields.One2many('project.task.smmonitor', 'smmonitor_task_id', string='Lista de registros de RR.SS.')
     temp_datetakesdata = fields.Date(string='Fecha de registro', default=fields.Date.context_today)
+    user_timezone_offset = fields.Integer(string='Desplazamiento zona horaria del usuario', default=0)
+    temp_engagement = fields.Float(string='Vinculación % (Egagmt)', digits=(6,2), default=0)
     temp_interactions = fields.Integer(string='Interacciones (CTR)', default=0)
     temp_reach = fields.Integer(string='Alcance', default=0)
     temp_impressions = fields.Integer(string='Impresiones', default=0)
-    analytics_count = fields.Integer(compute='_compute_analytics_count', string='Número de registros')
-    can_add_analytics = fields.Boolean(compute='_compute_can_add_analytics')
+    analytics_count = fields.Integer(string='Número de registros', compute='_compute_analytics_count')
 
     # Campos computados para el primer y último registro.
     firstdata_datetakesdata = fields.Date(compute='_compute_first_and_last_data', store=True, string='Registro inicial Fecha')
@@ -112,35 +111,6 @@ class SmmonitorProjectTask(models.Model):
     latestdata_interactions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Interacciones')
     latestdata_reach = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Alcance')
     latestdata_impressions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Impresiones')
-
-    def save_tz_offset(self, offset, timezone):
-        # Guardamos el offset y la zona horaria en el usuario actual
-        self.env.user.tz_offset = int(offset)
-        self.env.user.tz = timezone
-
-    # Método para generar hashtags en el formato adecuado
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.client',
-    #        'tag': 'copy_hashtags_action',
-    #        'params': {
-    #            'hashtags': hashtag_text
-    #        }
-    #    }
-
-    # ANULADO HASTA VERIFICAR FUNCIONAMIENTO DE JS - Método para copiar hashtags
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.act_url',
-    #        'url': 'data:text/plain;charset=utf-8,' + urllib.parse.quote(hashtag_text),
-    #        'target': 'new',
-    #    }
 
     # Ordena por fecha lista de registros indicando cual es el primer registro y el último registro. Además si no hay registros, los deja en valor "0" o "False"
     @api.depends('smmonitor_tabs.datetakesdata', 'smmonitor_tabs.engagement', 'smmonitor_tabs.reach', 'smmonitor_tabs.interactions', 'smmonitor_tabs.impressions')
@@ -256,14 +226,6 @@ class SmmonitorProjectTask(models.Model):
     growthrate_impressions_start_to_first = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>1 Impresiones')
     growthrate_impressions_last_to_end = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 8>F Impresiones')
 
-    @api.model #ayuda a evitar errores timezone para hacer más robusto el módulo obteniendo el offset directamente desde el perfil del usuario
-    def get_user_tz_offset(self):
-        try:
-            tz_offset = int(self.env.user.tz_offset)  # Asegurarse de que sea un entero
-            return tz_offset
-        except (ValueError, TypeError):
-            return 0  # Valor predeterminado si hay algún problema
-
     # Cálculo de campos computados para las 8 medias respecto del tiempo comprendido entre la fecha del primer juego de datos y la fecha del ultimo juego de datos introducidos.
     @api.depends('smmonitor_tabs', 'firstdata_datetakesdata', 'latestdata_datetakesdata')
     def _compute_averages(self):
@@ -360,20 +322,39 @@ class SmmonitorProjectTask(models.Model):
             return 100 if end_value > 0 else 0
         return ((end_value - start_value) / start_value) * 100
 
+    @api.model #ayuda a evitar errores con la cookie de timezone para hacer más robusto el módulo
+    def get_user_tz_offset(self):
+        try:
+            tz_offset = request.httprequest.cookies.get('tz_offset')
+            if tz_offset is not None:
+                return int(tz_offset)
+            else:
+                return 0
+        except ValueError:
+            return 0
+
+    @api.model
+    def default_get(self, fields):
+        res = super().default_get(fields)
+        if 'user_timezone_offset' in fields:
+            res['user_timezone_offset'] = self.get_user_tz_offset()
+        return res
+    
     @api.depends('smmonitor_tabs')
     def _compute_analytics_count(self):
         for task in self:
             task.analytics_count = len(task.smmonitor_tabs)
 
-    @api.depends('temp_interactions', 'temp_reach', 'temp_impressions')
+    @api.depends('temp_engagement', 'temp_interactions', 'temp_reach', 'temp_impressions')
     def _compute_can_add_analytics(self):
         for task in self:
             task.can_add_analytics = any([
+                task.temp_engagement != 0,
                 task.temp_interactions != 0,
                 task.temp_reach != 0,
                 task.temp_impressions != 0
             ])
-
+    
     @api.depends('smmonitor_tabs', 'smmonitor_tabs.datetakesdata', 'smmonitor_tabs.engagement', 'smmonitor_tabs.interactions', 'smmonitor_tabs.reach', 'smmonitor_tabs.impressions')
     def _compute_latest_analytics(self):
         for task in self:
@@ -384,21 +365,26 @@ class SmmonitorProjectTask(models.Model):
             task.latest_reach = latest_record.reach if latest_record else 0
             task.latest_impressions = latest_record.impressions if latest_record else 0
 
-    @api.constrains('temp_datetakesdata', 'temp_interactions', 'temp_reach', 'temp_impressions')
+    can_add_analytics = fields.Boolean(compute='_compute_can_add_analytics')
+
+    @api.constrains('temp_datetakesdata', 'temp_engagement', 'temp_interactions', 'temp_reach', 'temp_impressions')
     def _check_temp_values(self):
         for task in self:
-            tz_offset = int(self.env.user.tz_offset or 0)  # Obtenemos el offset desde el usuario y aseguramos de convertir a entero
+            # Obtener el desplazamiento de la cookie
+            tz_offset = self.get_user_tz_offset()
             today = fields.Date.context_today(task) - timedelta(minutes=tz_offset)
 
             if task.temp_datetakesdata > today:
                 raise ValidationError("La fecha no puede ser posterior al día de hoy.")
             if task.temp_datetakesdata < today - timedelta(days=365):
                 raise ValidationError("La fecha no puede ser anterior a un año desde hoy.")
-            if task.temp_interactions <= -1:
+            if task.temp_engagement < 0 or task.temp_engagement > 9999.99:
+                raise ValidationError("La vinculación debe estar entre 0% y 9999.99%.")
+            if task.temp_interactions < 0:
                 raise ValidationError("Las interacciones no pueden ser negativas.")
-            if task.temp_reach <= -1:
+            if task.temp_reach < 0:
                 raise ValidationError("El alcance no puede ser negativo.")
-            if task.temp_impressions <= -1:
+            if task.temp_impressions < 0:
                 raise ValidationError("Las impresiones no pueden ser negativas.")
 
     def action_add_analytics(self):
@@ -407,26 +393,17 @@ class SmmonitorProjectTask(models.Model):
             self.env['project.task.smmonitor'].create({
                 'smmonitor_task_id': self.id,
                 'datetakesdata': self.temp_datetakesdata,
+                'engagement': self.temp_engagement,
                 'interactions': self.temp_interactions,
                 'reach': self.temp_reach,
                 'impressions': self.temp_impressions,
             })
             self.sudo().write({
                 'temp_datetakesdata': fields.Date.context_today(self),
+                'temp_engagement': 0,
                 'temp_interactions': 0,
                 'temp_reach': 0,
                 'temp_impressions': 0,
             })
         else:
             raise ValidationError("No se pueden agregar análisis con todos los valores en cero.")
-        
-class SmmonitorProject(models.Model):
-    _inherit = 'project.project'
-
-    # Campo de selección para la Normalización de Vinculación
-    engagement_normalization = fields.Selection(
-        selection=[('100', '100'), ('1000', '1000'), ('10000', '10000')],
-        string='Normalización de Vinculación',
-        default='100',
-        help="Selecciona el valor adecuado para ajustar y normalizar el cálculo de la Vinculación (Engagement), en base a la cantidad de seguidores que existan en la red social que vas a gestionar con este proyecto."
-    )

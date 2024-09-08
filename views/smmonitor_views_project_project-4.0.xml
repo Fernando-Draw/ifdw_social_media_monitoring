@@ -1,0 +1,12 @@
+<odoo>
+    <record id="view_project_form_inherit_social_media" model="ir.ui.view">
+        <field name="name">project.project.form.social_media</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tag_ids']" position="after">
+                <field name="engagement_normalization" placeholder="Selecciona la normalización para Vinculación"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

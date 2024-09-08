@@ -134,6 +134,32 @@
         </field>
     </record>
 
+    <!-- Acción para abrir las vistas de análisis de Proyectro actual en RR.SS. -->
+    <record id="action_project_analitycs_smmonitor" model="ir.actions.act_window">
+        <field name="name">Análisis RR.SS. Proyecto</field>
+        <field name="res_model">project.task.smmonitor</field>
+        <field name="view_mode">tree,graph,pivot,calendar</field>
+        <field name="search_view_id" ref="view_task_search_actual_smmonitor"/>
+        <field name="context">{'search_default_datetakesdata_enabled': 1,
+                                'graph_measure': 'engagement',
+                                'calendar_view_ref': 'view_task_calendar_smmonitor', 'default_period': 'year'
+                                }
+        </field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_task_tree_smmonitor')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_task_graph_smmonitor')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_task_pivot_smmonitor')}),
+            (0, 0, {'view_mode': 'calendar', 'view_id': ref('view_task_calendar_smmonitor')}),
+            ]"/>
+    </record>
+
+    <!-- Elemento de menú para acceder a los análisis de proyectos de RR.SS. -->
+    <menuitem id="menu_project_analitycs_smmonitor"
+              name="Análisis de RR.SS. en Proyectos"
+              parent="project.menu_project_report"
+              action="action_project_analitycs_smmonitor"
+              sequence="20"/>
+
     <!-- Vista de formulario heredada para vista formulario completo de tarea, pestaña extra, botones, y demás -->
     <record id="view_task_form_inherit_smmonitor" model="ir.ui.view">
         <field name="name">project.task.form.inherit.smmonitor</field>
@@ -149,28 +175,12 @@
             </xpath>
             <xpath expr="//notebook/page[@name='sub_tasks_page']" position="after">
                 <page name="smmonitor_page" string="Control RR.SS.">
-                    <!-- <xpath expr="//notebook/page[@name='smmonitor_page']" position="inside">
-                        <group string="Tipo de Post y Hashtags asociados" col="2">
-                            <field name="smmonitor_hashtag_ids" 
-                                   widget="many2many_tags" 
-                                   options="{'color_field': 'color'}"
-                                   placeholder="Selecciona los hashtags para esta tarea"/>
-                        </group>
-                        <div class="d-flex justify-content-end mb-3">
-                            <button name="action_copy_hashtags"
-                                    string="Copiar Hashtags"
-                                    type="object"
-                                    class="btn-primary"
-                                    style="width: 250px !important;"
-                                    help="Copia todos los hashtags para pegarlos en las RR.SS."/>
-                        </div>
-                    </xpath>
-                    <xpath expr="." position="inside">
-                        <script type="module" src="/ifdw_social_media_monitoring/static/src/js/smmonitor_copy_hashtags.js"></script>
-                    </xpath> -->
-                    <group string="Registros para el análisis" col="2">
+                    <group string="Introducción de valores" col="3">
                         <group>
                             <field name="temp_datetakesdata" string="Fecha de registro" help="Introducir el día en formato dd/mm/aaaa con la que se relacionan los datos de la lectura que deseas introducir teniendo en cuenta los datos que muestras en la plataforma que estes usando. IMPORTANTE: El día no puede ser posterior a hoy, y no más antiguo de un año contanto desde hoy."/>
+                        </group>
+                        <group>
+                            <field name="temp_engagement" widget="percentage_precision" string="Vinculación % (Egagmt)" digits="[6,2]" help="El ratio de vinculación de tu audiencia (engagement) son las interacciones recibidas por cada 100 personas alcanzadas (interacciones totales / alcance total x 100) expresadas en un valor porcentual."/>
                             <field name="temp_interactions" string="Interacciones (CTR)" help="Las interacciones abarcan todas las acciones que los usuarios pueden llevar a cabo con respecto a tu contenido, como: Clics en la publicación o en enlaces. Me gusta (likes). Comentarios. Compartidos. Guardados (en plataformas que permiten esta opción)."/>
                         </group>
                         <group>
@@ -181,11 +191,11 @@
                     <div class="d-flex justify-content-end mb-3">
                         <field name="can_add_analytics" invisible="1"/>
                         <button name="action_add_analytics"
+                            help="Solo se puede añadir registros si algún valor es distinto de 0"
                             string="Añadir registro"
                             type="object"
                             class="btn-primary"
-                            style="width: 250px !important;"
-                            help="Añade el registro a la tabla de datos"/>
+                            style="width: 250px !important;"/>
                     </div>
                     <field name="smmonitor_tabs" readonly="0">
                         <tree editable="bottom" create="false" delete="true" class="header_tree_style">
@@ -212,31 +222,6 @@
                     </group>
                 </page>
             </xpath>
-        </field>
-    </record>
-
-    <!-- Vista kanban heredada para hashtags -->
-    <!-- <record id="view_task_hashtag_kanban_inherit" model="ir.ui.view">
-        <field name="name">project.task.kanban.hashtags.smmonitor</field>
-        <field name="model">project.task.hashtags.smmonitor</field>
-        <field name="inherit_id" ref="project.view_tag_kanban"/>
-        <field name="arch" type="xml">
-             Modificamos el título en la vista kanban
-            <xpath expr="//field[@name='name']" position="attributes">
-                <attribute name="string">Hashtag</attribute>
-            </xpath>
-        </field>
-    </record> -->
-    
-    <!-- Vista de lista/árbol heredada para hashtags -->
-    <record id="view_task_hashtag_tree" model="ir.ui.view">
-        <field name="name">project.task.hashtags.tree.smmonitor</field>
-        <field name="model">project.task.hashtags.smmonitor</field>
-        <field name="arch" type="xml">
-            <tree string="Hashtags" editable="top" multi_edit="1" default_order="name">
-                <field name="name" string="Hashtag"/>
-                <field name="color" widget="color_picker" string="Color"/>
-            </tree>
         </field>
     </record>
 
@@ -355,6 +340,7 @@
                 <field name="growthrate_reach" type="measure"/>
                 <field name="growthrate_impressions" type="measure"/>
                 <field name="temp_datetakesdata" invisible="1"/>
+                <field name="temp_engagement" invisible="1"/>
                 <field name="temp_reach" invisible="1"/>
                 <field name="temp_interactions" invisible="1"/>
                 <field name="temp_impressions" invisible="1"/>
@@ -452,6 +438,7 @@
                 <field name="growthrate_reach" invisible="1"/>
                 <field name="growthrate_impressions" invisible="1"/>
                 <field name="temp_datetakesdata" invisible="1"/>
+                <field name="temp_engagement" invisible="1"/>
                 <field name="temp_interactions" invisible="1"/>
                 <field name="temp_reach" invisible="1"/>
                 <field name="temp_impressions" invisible="1"/>
@@ -466,12 +453,10 @@
         <field name="inherit_id" ref="project.view_task_search_form"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
-                <!-- <field name="smmonitor_hashtag_ids"/> -->
                 <field name="firstdata_datetakesdata"/>
                 <field name="latestdata_datetakesdata"/>
                 <separator/>
                 <filter string="Tareas con registros de RR.SS." name="firstdata_datetakesdata_enabled" domain="[('firstdata_datetakesdata', '!=', False)]"/>
-                <!-- <filter string="Hashtags de la tarea" name="hashtags_of_task" domain="[('id', 'in', smmonitor_hashtag_ids)]"/> -->
                 <group expand="0" string="Agrupar por">
                     <filter string="Por fecha - Reg. Inic." name="group_by_firstdata_date" context="{'group_by': 'firstdata_datetakesdata:day'}"/>
                     <filter string="Por fecha - Reg. Fina." name="group_by_latestdata_date" context="{'group_by': 'latestdata_datetakesdata:day'}"/>
@@ -480,40 +465,9 @@
         </field>
     </record>
 
-    <menuitem id="menu_project_analitycs_rrss_smmonitor"
-              name="Análisis de RR.SS."
-              parent="project.menu_project_report"
-              sequence="10"/>
-
-    <!-- Acción para abrir las vistas de análisis el Análisis estandar de RR.SS. -->
-    <record id="action_project_analitycs_standard_smmonitor" model="ir.actions.act_window">
-        <field name="name">Análisis estandar de RR.SS.</field>
-        <field name="res_model">project.task.smmonitor</field>
-        <field name="view_mode">tree,graph,pivot,calendar</field>
-        <field name="search_view_id" ref="view_task_search_actual_smmonitor"/>
-        <field name="context">{'search_default_datetakesdata_enabled': 1,
-                                'graph_measure': 'engagement',
-                                'calendar_view_ref': 'view_task_calendar_smmonitor', 'default_period': 'year'
-                                }
-        </field>
-        <field name="view_ids" eval="[(5, 0, 0),
-            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_task_tree_smmonitor')}),
-            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_task_graph_smmonitor')}),
-            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_task_pivot_smmonitor')}),
-            (0, 0, {'view_mode': 'calendar', 'view_id': ref('view_task_calendar_smmonitor')}),
-            ]"/>
-    </record>
-
-    <!-- Elemento de menú para acceder a el Análisis estandar de RR.SS. -->
-    <menuitem id="menu_project_analitycs_standard_smmonitor"
-              name="Análisis estandar de RR.SS."
-              parent="menu_project_analitycs_rrss_smmonitor"
-              action="action_project_analitycs_standard_smmonitor"
-              sequence="1"/>
-
-    <!-- Acción de ventana específica para el Análisis avanzado de RR.SS. -->
+    <!-- Acción de ventana específica para las métricas de RR.SS. -->
     <record id="action_project_inherit_analitycs_smmonitor" model="ir.actions.act_window">
-        <field name="name">Análisis avanzado de RR.SS.</field>
+        <field name="name">Métricas de RR.SS.</field>
         <field name="res_model">project.task</field>
         <field name="view_mode">tree,graph,pivot,form</field>
         <field name="context">{'group_by_firstdata_date': 1 'grup_by' : 'firstdata_datetakesdata:day'}</field>
@@ -525,24 +479,11 @@
             (0, 0, {'view_mode': 'form', 'view_id': ref('view_task_form_inherit_smmonitor')})]"/>
     </record>
 
-    <!-- Elemento de menú para acceder a el Análisis avanzado de RR.SS. -->
+    <!-- Elemento de menú para acceder a las métricas de RR.SS. -->
     <menuitem id="menu_project_inherit_analitycs_smmonitor"
-              name="Análisis avanzado de RR.SS."
-              parent="menu_project_analitycs_rrss_smmonitor"
+              name="Métricas de RR.SS."
+              parent="project.menu_project_report"
               action="action_project_inherit_analitycs_smmonitor"
-              sequence="2"/>
+              sequence="20"/>
 
-    <!-- Acción de ventana específica para las hashtags de RR.SS. -->
-    <!-- <record id="action_project_hashtags_smmonitor" model="ir.actions.act_window">
-        <field name="name">Hashtags de RR.SS.</field>
-        <field name="res_model">project.task.hashtags.smmonitor</field>
-        <field name="view_mode">tree,form</field>
-    </record> -->
-    
-    <!-- Elemento de menú para acceder a las hashtags de RR.SS. -->
-    <!-- <menuitem id="menu_project_hashtags_smmonitor"
-            name="Hashtags de RR.SS."
-            parent="project.menu_project_config"
-            action="action_project_hashtags_smmonitor"
-            sequence="10"/> -->
 </odoo>

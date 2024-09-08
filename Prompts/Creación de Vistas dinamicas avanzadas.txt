@@ -1,0 +1,61 @@
+Teniendo el cuenta el codigo principal de mi módulo para redes sociales, necesito generar una serie de vistas personalizadas usando lo
+que sea más eficiente como JavaScript, HTML, CSS o todos juntos, para conseguir poder visualizar una mezcla de vistas gráficas que sean
+dinámicas y nos permitan mostrar una cantidad de mezcla de datos muy amplia, ya que Odoo, no permite esta función con las vistas
+gráficas que integra. 
+
+Los datos principales a controlar son:
+"engagement"
+"interactions"
+"reach"
+"impressions"
+
+Por lo que el cruce de datos tiene que poder visualizar:
+
+Multiples tareas que contengan almenos una fila de datos en:
+class SmmonitorTaskAnalytics(models.Model):
+    _name = 'project.task.smmonitor'
+
+Si no contienen datos aquí, no se visualizaran en los gráficos.
+
+Se tiene que poder definir el periodo de tiempo de los datos que queremos visualizar, y al definir dicho periodo de tiempo,
+se tentra que aplicar el correspondiente filtro de tiempo para mostrar solo las filas de datos que estan registrados en:
+
+class SmmonitorTaskAnalytics(models.Model):
+    _name = 'project.task.smmonitor'
+
+Si una tarea tiene datos en : 'project.task.smmonitor', pero estos datos no están dentro del rango del filtro de tiempo,
+no se mostrara dicha tarea ni los registros, ya que no coincidirán con el filtrado.
+
+Los datos, se tienen que poder mostrar en dos tipos de visualizaciones, gráficos de barras verticales con distintos colores para cada
+valor de interes, y gráficos de líneas modernos con distintos colores para cada linea de los valores representados teniendo en cuenta
+que las lineas no han de ser rectas entre los registros según avanza la temporalidad de los mismos, si no que se tienen que representar
+como lineas curvas para reflejar de mejor forma las zonas valle y las zonas pico de las posibles mediciones existentes pero que no se
+llegaron a tomar.
+
+Recordarte que los los datos de interés son estos:
+"engagement"
+"interactions"
+"reach"
+"impressions"
+
+Como podrás examinar los archivos del código fuente del módulo, podrás ver que hay muchos campos que ya se calculan para poder sacar
+datos e interpelarlos en las gráficas, entre ellos están los campos:
+
+"firstdata_*" -> que controlan el registro inicial de datos introducido.
+"latestdata_*" -> que controlan el registro final de los datos introducido (a veces puede pasar que "firstdata_*"  y "latestdata_*" puedan
+coincidir, por que son el mismo valor al existir solo un dato, esto tenemos que tenerlo en cuenta.
+
+"taverage01_*" a "taverage08_*" son todos los campos de las medias ponderadas que se calculan en base a los datos que se van introduciendo
+en 'project.task.smmonitor', y dichas medías estan calculadas de tal forma que respetan el tiempo de inicio del dato inicial al tiempo y dia
+de la introducción del dato final.
+
+"growthrate_*_1_to_2", "growthrate_*_2_to_3", "growthrate_*_3_to_4" y sucesivas, son las tasas de crecimiento en valores porcentuales de cada
+uno de las variables que introducimos, "engagement", "impressions"... etc. Al mismo tiempo tenemos las tasas de crecimiento desde el valor
+inicial introducido hasta el valor final introducido y estas se nombran: "growthrate_engagement", "growthrate_interactions", "growthrate_reach",
+"growthrate_impressions" y las tasas de crecimiento desde el primer valor introducido hasta la primera medía calculada que se
+nombran: "growthrate_*_start_to_first" con lo que tambien evidentemente calculamos la ultima tasa de crecimiento, que se
+nombran: "growthrate_*_last_to_end". 
+
+Dicho todo esto, ¿crees que puedes hacer lo que te he pedido? (comprueba siempre que lo que haces es correcto, no escribas el código
+completo de los archivos existentes, solo las modificaciones  y señalando donde hay que hacerlas, si el archivo o código no existe y
+hay que crearlo por completo, si tienes que escribirlo completo y dando las instrucciones de en que carpeta del modulo crees que toca crearlo)

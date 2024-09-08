@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de árbol para project.task.smmonitor -->
+    <record id="view_task_smmonitor_tree" model="ir.ui.view">
+        <field name="name">project.task.smmonitor.tree</field>
+        <field name="model">project.task.smmonitor</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="task_id"/>
+                <field name="date"/>
+                <field name="engagement" widget="percentage"/>
+                <field name="reach"/>
+                <field name="interactions"/>
+                <field name="impressions"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de gráfico para project.task.smmonitor -->
+    <record id="view_task_smmonitor_graph" model="ir.ui.view">
+        <field name="name">project.task.smmonitor.graph</field>
+        <field name="model">project.task.smmonitor</field>
+        <field name="arch" type="xml">
+            <graph string="Análisis de RR.SS.">
+                <field name="date" interval="day"/>
+                <field name="engagement" type="measure"/>
+                <field name="reach" type="measure"/>
+                <field name="interactions" type="measure"/>
+                <field name="impressions" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista de tabla dinámica para project.task.smmonitor -->
+    <record id="view_task_smmonitor_pivot" model="ir.ui.view">
+        <field name="name">project.task.smmonitor.pivot</field>
+        <field name="model">project.task.smmonitor</field>
+        <field name="arch" type="xml">
+            <pivot string="Análisis de RR.SS.">
+                <field name="date" interval="day" type="row"/>
+                <field name="task_id" type="col"/>
+                <field name="engagement" type="measure"/>
+                <field name="reach" type="measure"/>
+                <field name="interactions" type="measure"/>
+                <field name="impressions" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Acción para abrir las vistas de project.task.smmonitor -->
+    <record id="action_task_smmonitor" model="ir.actions.act_window">
+        <field name="name">Análisis de RR.SS.</field>
+        <field name="res_model">project.task.smmonitor</field>
+        <field name="view_mode">tree,graph,pivot</field>
+    </record>
+
+    <!-- Vista de formulario heredada para project.task -->
+    <record id="view_task_form_inherit_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.form.inherit.smmonitor</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="action" name="%(action_task_smmonitor)d" 
+                        context="{'search_default_task_id': active_id}"
+                        icon="fa-chart-line">
+                    <field string="Análisis" name="analytics_count" widget="statinfo"/>
+                </button>
+            </xpath>
+            <xpath expr="//notebook/page[@name='sub_tasks_page']" position="after">
+                <page name="smmonitor_page" string="Control RR.SS.">
+                    <group>
+                        <group>
+                            <field name="temp_engagement" widget="percentage" string="Vinculación % (Egagmt)" digits="[6,2]"/>
+                            <field name="temp_reach" string="Alcance"/>
+                        </group>
+                        <group>
+                            <field name="temp_interactions" string="Interacciones (CTR)"/>
+                            <field name="temp_impressions" string="Impresiones"/>
+                        </group>
+                        <group>
+                            <field name="temp_date" string="Fecha (dd/mm/aaaa)"/>
+                            <field name="user_timezone_offset" invisible="1"/>
+                        </group>
+                    </group>
+                    <div class="d-flex justify-content-end mb-3">
+                        <field name="can_add_analytics" invisible="1"/>
+                        <button name="action_add_analytics"
+                                string="Añadir datos"
+                                type="object"
+                                class="btn-primary"
+                                style="width: 250px !important;"/>
+                    </div>
+                    <field name="smmonitor_ids" readonly="0">
+                        <tree editable="bottom" create="false" delete="true">
+                            <field name="date" string="Fecha" readonly="1"/>
+                            <field name="engagement" widget="percentage" string="Vinculación % (Egagmt)" digits="[6,2]" readonly="0"/>
+                            <field name="reach" string="Alcance" readonly="0"/>
+                            <field name="interactions" string="Interacciones (CTR)" readonly="0"/>
+                            <field name="impressions" string="Impresiones" readonly="0"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Vista de árbol heredada para project.task -->
+    <record id="view_task_tree_inherit_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.tree.inherit.smmonitor</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2"/>
+        <field name="arch" type="xml">
+            <field name="stage_id" position="after">
+                <field name="latest_date" optional="hide"/>
+                <field name="latest_engagement" widget="percentage" optional="hide"/>
+                <field name="latest_reach" optional="hide"/>
+                <field name="latest_interactions" optional="hide"/>
+                <field name="latest_impressions" optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Vista de tabla dinámica heredada para project.task -->
+    <record id="view_task_pivot_inherit_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.pivot.inherit.smmonitor</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_project_task_pivot"/>
+        <field name="arch" type="xml">
+            <pivot position="inside">
+                <field name="latest_date" type="row"/>
+                <field name="latest_engagement" type="measure"/>
+                <field name="latest_reach" type="measure"/>
+                <field name="latest_interactions" type="measure"/>
+                <field name="latest_impressions" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vista de gráfico heredada para project.task -->
+    <record id="view_task_graph_inherit_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.graph.inherit.smmonitor</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_project_task_graph"/>
+        <field name="arch" type="xml">
+            <graph position="inside">
+                <field name="latest_date" type="row"/>
+                <field name="latest_engagement" type="measure"/>
+                <field name="latest_reach" type="measure"/>
+                <field name="latest_interactions" type="measure"/>
+                <field name="latest_impressions" type="measure"/>
+            </graph>
+        </field>
+    </record>
+</odoo>
+

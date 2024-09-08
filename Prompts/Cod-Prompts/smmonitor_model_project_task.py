@@ -1,17 +1,13 @@
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
-from odoo.http import request
-#from .smmonitor_model_project_task_hashtags import SmmonitorProjectTaskHashtags
-from datetime import datetime, timedelta
-from pytz import timezone
-
+Nombre de archvio:
+smmonitor_model.py
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 class SmmonitorTaskAnalytics(models.Model):
     _name = 'project.task.smmonitor'
     _description = 'Lista de registros guardados para la tarea actual desde la cual se calculan la grán mayoría del resto de valores del módulo'
     
     # Campos principales del módulo IfDw Social Media Monitoring
     smmonitor_task_id = fields.Many2one('project.task', string='Titulo', required=True, ondelete='cascade')
-    datetakesdata = fields.Date(string='Fecha de registro', required=True)
+    datetakesdata = fields.Date(string='Fecha de registro', required=True)  # Quitamos default aquí.
     engagement = fields.Float(string='Vinculación % (Egagmt)', compute='_compute_smmonitor_engagement',digits=(6,2), store=True)
     interactions = fields.Integer(string='Interacciones (CTR)', store=True)
     reach = fields.Integer(string='Alcance', store=True)
@@ -75,7 +71,7 @@ class SmmonitorTaskAnalytics(models.Model):
                 raise ValidationError("Las interacciones no pueden ser negativas.")
             if record.impressions <= -1:
                 raise ValidationError("Las impresiones no pueden ser negativas.")
-
+            
     @api.constrains('datetakesdata')
     def _check_unique_per_day(self):
         for record in self:
@@ -92,56 +88,28 @@ class SmmonitorProjectTask(models.Model):
     _description = 'Tareas de proyectos, personalización para S.M. Monitor'
 
     smmonitor_tabs = fields.One2many('project.task.smmonitor', 'smmonitor_task_id', string='Titulo/Publicación')
-    #smmonitor_hashtag_ids = fields.Many2many('project.task.hashtags.smmonitor', string='Hashtags RR.SS.')
     temp_datetakesdata = fields.Date(string='Fecha de registro', default=fields.Date.context_today)
-    temp_interactions = fields.Integer(string='Interacciones (CTR)', default=0)
-    temp_reach = fields.Integer(string='Alcance', default=0)
-    temp_impressions = fields.Integer(string='Impresiones', default=0)
-    analytics_count = fields.Integer(compute='_compute_analytics_count', string='Número de registros')
-    can_add_analytics = fields.Boolean(compute='_compute_can_add_analytics')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     # Campos computados para el primer y último registro.
     firstdata_datetakesdata = fields.Date(compute='_compute_first_and_last_data', store=True, string='Registro inicial Fecha')
-    firstdata_engagement = fields.Float(compute='_compute_first_and_last_data', store=True, string='Registro inicial Vinculación')
-    firstdata_interactions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro inicial Interacciones')
-    firstdata_reach = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro inicial Alcance')
-    firstdata_impressions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro inicial Impresiones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     latestdata_datetakesdata = fields.Date(compute='_compute_first_and_last_data', store=True, string='Registro final Fecha')
-    latestdata_engagement = fields.Float(compute='_compute_first_and_last_data', store=True, string='Registro final Vinculación')
-    latestdata_interactions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Interacciones')
-    latestdata_reach = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Alcance')
-    latestdata_impressions = fields.Integer(compute='_compute_first_and_last_data', store=True, string='Registro final Impresiones')
-
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
+    
     def save_tz_offset(self, offset, timezone):
         # Guardamos el offset y la zona horaria en el usuario actual
         self.env.user.tz_offset = int(offset)
         self.env.user.tz = timezone
 
-    # Método para generar hashtags en el formato adecuado
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.client',
-    #        'tag': 'copy_hashtags_action',
-    #        'params': {
-    #            'hashtags': hashtag_text
-    #        }
-    #    }
-
-    # ANULADO HASTA VERIFICAR FUNCIONAMIENTO DE JS - Método para copiar hashtags
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.act_url',
-    #        'url': 'data:text/plain;charset=utf-8,' + urllib.parse.quote(hashtag_text),
-    #        'target': 'new',
-    #    }
-
+    def action_copy_hashtags(self):
+        #Función para copiar los hashtags asociados a la tarea en formato de texto plano
+        self.ensure_one()
+        hashtags = self.smmonitor_hashtag_ids.mapped('name')
+        hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
+        return hashtag_text
+    
     # Ordena por fecha lista de registros indicando cual es el primer registro y el último registro. Además si no hay registros, los deja en valor "0" o "False"
     @api.depends('smmonitor_tabs.datetakesdata', 'smmonitor_tabs.engagement', 'smmonitor_tabs.reach', 'smmonitor_tabs.interactions', 'smmonitor_tabs.impressions')
     def _compute_first_and_last_data(self):
@@ -152,109 +120,44 @@ class SmmonitorProjectTask(models.Model):
                 last_record = sorted_tabs[-1]
                 
                 task.firstdata_datetakesdata = first_record.datetakesdata
-                task.firstdata_engagement = first_record.engagement
-                task.firstdata_interactions = first_record.interactions
-                task.firstdata_reach = first_record.reach
-                task.firstdata_impressions = first_record.impressions
-                
-                task.latestdata_datetakesdata = last_record.datetakesdata
-                task.latestdata_engagement = last_record.engagement
-                task.latestdata_interactions = last_record.interactions
-                task.latestdata_reach = last_record.reach
-                task.latestdata_impressions = last_record.impressions
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
             else:
                 # Si no hay registros, establecemos todos los valores a False o 0
                 task.firstdata_datetakesdata = task.latestdata_datetakesdata = False
-                task.firstdata_engagement = task.latestdata_engagement = 0
-                task.firstdata_interactions = task.latestdata_interactions = 0
-                task.firstdata_reach = task.latestdata_reach = 0
-                task.firstdata_impressions = task.latestdata_impressions = 0
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     # Campos para las 8 medias que se calculan comprendidas a espacios iguales (11.11111%) entre la fecha del registo inicial y final
     taverage01_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 1 Vinculación')
-    taverage02_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 2 Vinculación')
-    taverage03_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 3 Vinculación')
-    taverage04_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 4 Vinculación')
-    taverage05_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 5 Vinculación')
-    taverage06_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 6 Vinculación')
-    taverage07_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 7 Vinculación')
-    taverage08_engagement = fields.Float(compute='_compute_averages', store=True, string='Cálculo media 8 Vinculación')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     taverage01_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 1 Interacciones')
-    taverage02_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 2 Interacciones')
-    taverage03_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 3 Interacciones')
-    taverage04_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 4 Interacciones')
-    taverage05_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 5 Interacciones')
-    taverage06_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 6 Interacciones')
-    taverage07_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 7 Interacciones')
-    taverage08_interactions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 8 Interacciones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     taverage01_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 1 Alcance')
-    taverage02_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 2 Alcance')
-    taverage03_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 3 Alcance')
-    taverage04_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 4 Alcance')
-    taverage05_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 5 Alcance')
-    taverage06_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 6 Alcance')
-    taverage07_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 7 Alcance')
-    taverage08_reach = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 8 Alcance')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     taverage01_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 1 Impresiones')
-    taverage02_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 2 Impresiones')
-    taverage03_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 3 Impresiones')
-    taverage04_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 4 Impresiones')
-    taverage05_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 5 Impresiones')
-    taverage06_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 6 Impresiones')
-    taverage07_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 7 Impresiones')
-    taverage08_impressions = fields.Integer(compute='_compute_averages', store=True, string='Cálculo media 8 Impresiones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
     
     # Campos para tasas de crecimiento entre medias de los registros inicial a final sin tener en cuenta los valores intermedios
     growthrate_engagement = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>F Vinculación')
-    growthrate_interactions = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>F Interacciones')
-    growthrate_reach = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>F Alcance')
-    growthrate_impressions = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>F Impresiones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     # Campos para tasas de crecimiento de 8 valores medios que tienen en cuenta todos los registros incluidos el inicial y el final en los cálculos
     growthrate_engagement_1_to_2 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 1>2 Vinculación')
-    growthrate_engagement_2_to_3 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 2>3 Vinculación')
-    growthrate_engagement_3_to_4 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 3>4 Vinculación')
-    growthrate_engagement_4_to_5 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 4>5 Vinculación')
-    growthrate_engagement_5_to_6 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 5>6 Vinculación')
-    growthrate_engagement_6_to_7 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 6>7 Vinculación')
-    growthrate_engagement_7_to_8 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 7>8 Vinculación')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     growthrate_interactions_1_to_2 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 1>2 Interacciones')
-    growthrate_interactions_2_to_3 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 2>3 Interacciones')
-    growthrate_interactions_3_to_4 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 3>4 Interacciones')
-    growthrate_interactions_4_to_5 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 4>5 Interacciones')
-    growthrate_interactions_5_to_6 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 5>6 Interacciones')
-    growthrate_interactions_6_to_7 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 6>7 Interacciones')
-    growthrate_interactions_7_to_8 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 7>8 Interacciones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     growthrate_reach_1_to_2 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 1>2 Alcance')
-    growthrate_reach_2_to_3 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 2>3 Alcance')
-    growthrate_reach_3_to_4 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 3>4 Alcance')
-    growthrate_reach_4_to_5 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 4>5 Alcance')
-    growthrate_reach_5_to_6 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 5>6 Alcance')
-    growthrate_reach_6_to_7 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 6>7 Alcance')
-    growthrate_reach_7_to_8 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 7>8 Alcance')
-
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
     growthrate_impressions_1_to_2 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 1>2 Impresiones')
-    growthrate_impressions_2_to_3 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 2>3 Impresiones')
-    growthrate_impressions_3_to_4 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 3>4 Impresiones')
-    growthrate_impressions_4_to_5 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 4>5 Impresiones')
-    growthrate_impressions_5_to_6 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 5>6 Impresiones')
-    growthrate_impressions_6_to_7 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 6>7 Impresiones')
-    growthrate_impressions_7_to_8 = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 7>8 Impresiones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     # Campos para tasas de crecimiento inicio-primera y última-fin
     growthrate_engagement_start_to_first = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>1 Vinculación')
-    growthrate_engagement_last_to_end = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 8>F Vinculación')
-    growthrate_interactions_start_to_first = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>1 Interacciones')
-    growthrate_interactions_last_to_end = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 8>F Interacciones')
-    growthrate_reach_start_to_first = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>1 Alcance')
-    growthrate_reach_last_to_end = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 8>F Alcance')
-    growthrate_impressions_start_to_first = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento I>1 Impresiones')
-    growthrate_impressions_last_to_end = fields.Float(compute='_compute_averages', store=True, string='Tasa Crecimiento 8>F Impresiones')
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
 
     @api.model #ayuda a evitar errores timezone para hacer más robusto el módulo obteniendo el offset directamente desde el perfil del usuario
     def get_user_tz_offset(self):

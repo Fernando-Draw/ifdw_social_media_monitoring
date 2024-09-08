@@ -1,0 +1,21 @@
+web.assets_web.min.js:19000 Error al guardar el desplazamiento de zona horaria: RPC_ERROR
+    at makeErrorFromResponse (https://nerdo.pruebas.odoo17/web/assets/8315658/web.assets_web.min.js:2886:163)
+    at XMLHttpRequest.<anonymous> (https://nerdo.pruebas.odoo17/web/assets/8315658/web.assets_web.min.js:2890:13)
+(anónimo) @ web.assets_web.min.js:19000
+web.assets_web.min.js:10689 Service worker registration failed, error: DOMException: Failed to register a ServiceWorker for scope ('https://nerdo.pruebas.odoo17/web') with script ('https://nerdo.pruebas.odoo17/web/service-worker.js'): An SSL certificate error occurred when fetching the script.
+(anónimo) @ web.assets_web.min.js:10689
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="account.menu_finance"]
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid='sale.sale_menu_root']
+web.assets_web.min.js:10895 .o_field_res_partner_many2one[name='partner_id']
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="crm.crm_menu_root"]
+web.assets_web.min.js:10895 .o_menu_systray .o_edit_website_container a
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="purchase.menu_purchase_root"]
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="project.menu_main_pm"]
+web.assets_web.min.js:10895 .o_menu_systray .o_new_content_container > a
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="mass_mailing.mass_mailing_menu_root"]
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="hr_expense.menu_hr_expense_root"]
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="hr_holidays.menu_hr_holidays_root"]
+web.assets_web.min.js:10895 body:not(.editor_has_snippets) .o_new_content_container > a
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="event.event_main_menu"]
+web.assets_web.min.js:10895 .o_app[data-menu-xmlid="survey.menu_surveys"]
+web.assets_web.min.js:10895 iframe .o_wforum_ask_btn

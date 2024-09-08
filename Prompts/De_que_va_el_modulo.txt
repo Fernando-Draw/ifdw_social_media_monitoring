@@ -1,0 +1,54 @@
+Vamos a tratar se solucionar un problema que tengo con una parte de un módulo de Odoo que vengo intentando desarrollar desde hace un tiempo.
+
+Este módulo se integra en Odoo (para su versión 17). Se integra en el módulo Proyectos/Tareas de tal forma que añade una nueva pestaña
+a las tareas donde se pueden añadir los datos principales que trabajaremos ('Fecha de registro', 'Vinculación' (engagement),
+'Interacciones (CTR)', 'Alcance', 'Impresiones', 'Hashtags', 'Tipo de publicación', 'Medias ponderadas de las variables' y 'Tasas de
+crecimiento entre las variables y los valores iniciales y finales de las mediciones introducidas').
+A su vez se integra en el sub-menú de Proyectos/Informes/Análisis de RR.SS. para añadir dos categorías especiales de análisis dado
+todos los parámetros y variables que se van a controlar (aun hay cosas que terminar de hacer en las vistas que se han creado)
+A su vez se integra en el sub-menú de Proyectos/Ajuste/Hashtags RR.SS. para crear una vista de lista igual a la vista de lista de las
+"etiquetas" ya integra el módulo "base de proyectos", solo que esta integración de Hashtags esta pensada para que solo afecte a las tareas
+y no a los proyectos, ya que los proyectos no necesitan esta propiedad o variable.
+
+Hay que pensar que dentro de el control de las redes sociales, es como tener un proyecto a muy largo plazo y en constante evolución y
+crecimiento, y por lo tanto una empresa puede tener una sola red social, (equivale a un proyecto) o puede tener múltiples redes sociales
+(equivale a multiples proyectos). Por lo que a su vez este módulo puede servir a una sola empresa que gestione sus propias redes sociales
+o a su vez este módulo puede servir a empresas de publicidad/marketing/agencias/similares que se dediquen a gestionar múltiples perfiles
+de distintos clientes y por lo tanto tengan que reportar los resultados a los clientes.
+
+Dado que las 5 variables que miden y controlan cualquier red social en una comprensión en conjunto se pueden englobar en "temporalidad de
+las acciones", "impresiones que la red social ejecuta de nuestras publicaciones", "alcance que estas impresiones tienen en nuevos usuarios",
+"interacciones totales (entre todo lo que se puede hacer en cada red social) que los usuarios realizan en las publicaciones", "vinculación
+(engagement) que todo esto genera en los usuarios, tanto los que siguen los perfiles sociales como los que no siguen pero comparten que se
+mide mediante la correspondiente operación matemáticas global de los valores antes descritos", podemos decir que al englobar estas 5 variables
+podemos acabar comparando el resultado real al extrapolar los datos desde las plataformas oficiales a nuestra propia lógica de análisis.
+Es cierto que eso hace que tengamos un trabajo extra adicional, (en el futuro intentaremos solucionarlo con lectura directa y vinculación
+directa mediante API's) pero el beneficio que obtenemos al tener datos que se pueden comparar entre si en un solo lugar no lo podemos obtener
+con las distintas opciones que existen en el mercado, (hotsuit o metricool) ya que en estas opciones no podemos integrar el trabajo que se
+realiza para llevar cada acción de publicación, solo podemos medir el reporte de como actúan dichas publicaciones en las redes sociales. 
+
+Aquí la idea es poder conseguir no solamente la medición de lo que una publicación otorga en las redes, si no el impacto de esfuerzo que
+llevo crearla para conseguir dicho impacto en las redes sociales, (algo que ya se puede hacer facilmente con el control de tareas de Odoo
+y los partes de horas y todas las funcionalidades que Odoo ya integra). Por eso se ha escogido integrar esto dentro de los proyectos de Odoo
+y no desarrollar un módulo aparte con una logica diferente, que despues tenga que tener más mezcla en otras partes de Odoo.
+
+Por otro lado se busca la facil comprensión de los usuarios, y la facilidad de poder introducir los datos sin que les suponga un grandisimo
+esfuerzo, ya que en el mundo laboral, el trabajador medio, no quiere estar instroduciendo datos en plataformas que controlan lo que hacen,
+pero este control es necesario para poder rentabilizar la economia de esfuerzo-retorno y por lo tanto lo que se gana no solo economicamente,
+si no a nivel de reputación, tanto si se trata de una PYME como si se trata de una Macro Corporación, pero el caso, es que la macro Corporación
+ya tiene este problema seguramente más que solventado con software más compleo o con más mano de obra, donde este problema no esta para nada
+bien solucionado es en la pequeña empresa y autonomos, que de hecho a nivel mundial es uno de los sectores más abundantes.
+De ahi que un valor primordial como lo es "vinculación (engagement)" lo autocalculemos con una formula simple, para que de un ratio
+realista en base a la cantidad de seguidores y publico que tiene dicha red social, por lo que hemos creado un parametro de configuración en
+ajustes de proyectos para compensar los ratios de vinculación según la cantidad de seguidores que el proyecto/red social pueda tener de tal,
+forma que se podra cambiar dicho ratio se la red crece. Ya que no se perciviran las mismas interacciónes en una red social con 800 seguidores
+que una que maneje 800.000 seguidores.
+
+Ya que tienes un contexto general de lo que se pretende lograr, vamos con el código:
+
+(Espera que te mando poco a poco los trozos de código, no hace falta que contestes ni escribas nada aun)
+
+Esquema de directorios y archivos del modulo (se utiliza un esquema clasico para los módulos de Odoo)
+
+# campos eliminados para resumir el código para ti, estos campos existen en la versión oficial.
+# codigo eliminado para resumirlo para ti.
