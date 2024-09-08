@@ -4,14 +4,11 @@
 
 Notificación push desde ChatBox
 ===============================
-*A veces es suficiente con poder registrar los valores adecuados para poder mezclar los datos con lo que tenemos en Odoo, por lo que no siempre es necesario tareas complicadas de conexiones entre plataformas para obtener lo que necesitamos, de esa simple necesidad nace este módulo. Anota tus principales valores de seguimiento de redes sociales en las tareas de un proyecto indicado para el mismo proposito, y despues muevete por las distintas vistas de odoo para ver como evolucionan las acciones que tomas para cada publicación que en el fondo corresponderá a una tarea. Todo depende de como te organices, pero, la idea es que actualices estos valores por publicación (tarea) y lo hagas por periodos semanales o quincenales, para ver la progresión de tu trabajo.
+* A veces es suficiente con poder registrar los valores adecuados para poder mezclar los datos con lo que tenemos en Odoo, por lo que no siempre es necesario tareas complicadas de conexiones entre plataformas para obtener lo que necesitamos, de esa simple necesidad nace este módulo. Anota tus principales valores de seguimiento de redes sociales en las tareas de un proyecto indicado para el mismo proposito, y despues muevete por las distintas vistas de odoo para ver como evolucionan las acciones que tomas para cada publicación que en el fondo corresponderá a una tarea. Todo depende de como te organices, pero, la idea es que actualices estos valores por publicación (tarea) y lo hagas por periodos semanales o quincenales, para ver la progresión de tu trabajo.
 
 Configuración
 ==============
-*Instalar el paquete python pyfcm
-*Instale nuestro módulo y asegúrese de que su instancia se proporcione a través de https, ya que Firebase tiene la intención de ser una solución altamente segura, por lo que han optado por requerir el uso de https para todas las comunicaciones y http no funciona.
-*Después de la instalación del módulo, es importante permitir el acceso a las notificaciones en la página web.
-
+* Cumplimentar
 Compañía
 -------
 * `Infinity Draw <https://infinitydraw.es/>`__
