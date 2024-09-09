@@ -1,9 +1,9 @@
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError, UserError
 from odoo.http import request
+from odoo.tools.translate import _
 from datetime import datetime, timedelta
 from pytz import timezone
-from odoo.addons.web.controllers.main import ReportController
 
 class SmmonitorTaskAnalytics(models.Model):
     _name = 'project.task.smmonitor'
@@ -118,30 +118,33 @@ class SmmonitorProjectTask(models.Model):
         self.env.user.tz_offset = int(offset)
         self.env.user.tz = timezone
 
-    # Método para generar hashtags en el formato adecuado
+    # Método para generar hashtags en el formato adecuado y copiarlos al portapeles
     def action_copy_hashtags(self):
         self.ensure_one()
         hashtags = [f'#{tag.name}' for tag in self.smmonitor_hashtag_ids]
         hashtag_text = '\n'.join(hashtags)
+
+        if not hashtag_text:
+            raise UserError(_("No hay hashtags asociados a esta tarea/publicación."))
+
         return {
             'type': 'ir.actions.client',
-            'tag': 'copy_hashtags_action',
+            'tag': 'display_notification',
             'params': {
-                'hashtags': hashtag_text
+                'title': _('Hashtags copiados'),
+                'message': _('Los hashtags han sido copiados al portapapeles.'),
+                'type': 'success',
+                'sticky': False,
+                'next': {
+                    'type': 'ir.actions.client',
+                    'tag': 'smmonitor_copy_hashtags',
+                    'params': {
+                        'content': hashtag_text
+                    }
+                }
             }
         }
-
-    # ANULADO HASTA VERIFICAR FUNCIONAMIENTO DE JS - Método para copiar hashtags
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.act_url',
-    #        'url': 'data:text/plain;charset=utf-8,' + urllib.parse.quote(hashtag_text),
-    #        'target': 'new',
-    #    }
-
+    
     # Ordena por fecha lista de registros indicando cual es el primer registro y el último registro. Además si no hay registros, los deja en valor "0" o "False"
     @api.depends('smmonitor_tabs.datetakesdata', 'smmonitor_tabs.engagement', 'smmonitor_tabs.reach', 'smmonitor_tabs.interactions', 'smmonitor_tabs.impressions')
     def _compute_first_and_last_data(self):
