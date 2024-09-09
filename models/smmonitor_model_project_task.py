@@ -92,7 +92,7 @@ class SmmonitorProjectTask(models.Model):
     _description = 'Tareas de proyectos, personalización para S.M. Monitor'
 
     smmonitor_tabs = fields.One2many('project.task.smmonitor', 'smmonitor_task_id', string='Titulo/Publicación')
-    #smmonitor_hashtag_ids = fields.Many2many('project.task.hashtags.smmonitor', string='Hashtags RR.SS.')
+    smmonitor_hashtag_ids = fields.Many2many('project.task.hashtags.smmonitor', string='Hashtags RR.SS.')
     temp_datetakesdata = fields.Date(string='Fecha de registro', default=fields.Date.context_today)
     temp_interactions = fields.Integer(string='Interacciones (CTR)', default=0)
     temp_reach = fields.Integer(string='Alcance', default=0)
@@ -119,17 +119,17 @@ class SmmonitorProjectTask(models.Model):
         self.env.user.tz = timezone
 
     # Método para generar hashtags en el formato adecuado
-    #def action_copy_hashtags(self):
-    #    self.ensure_one()
-    #    hashtags = self.smmonitor_hashtag_ids.mapped('name')
-    #    hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
-    #    return {
-    #        'type': 'ir.actions.client',
-    #        'tag': 'copy_hashtags_action',
-    #        'params': {
-    #            'hashtags': hashtag_text
-    #        }
-    #    }
+    def action_copy_hashtags(self):
+        self.ensure_one()
+        hashtags = self.smmonitor_hashtag_ids.mapped('name')
+        hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'copy_hashtags_action',
+            'params': {
+                'hashtags': hashtag_text
+            }
+        }
 
     # ANULADO HASTA VERIFICAR FUNCIONAMIENTO DE JS - Método para copiar hashtags
     #def action_copy_hashtags(self):

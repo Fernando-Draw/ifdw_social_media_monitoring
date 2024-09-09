@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_project_task_smmonitor,access_project_task_smmonitor,model_project_task_smmonitor,project.group_project_user,1,1,1,1
+access_project_task_hashtags_smmonitor,access_project_task_hashtags_smmonitor,model_project_task_hashtags_smmonitor,project.group_project_user,1,1,1,1

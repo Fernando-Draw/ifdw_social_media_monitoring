@@ -149,7 +149,7 @@
             </xpath>
             <xpath expr="//notebook/page[@name='sub_tasks_page']" position="after">
                 <page name="smmonitor_page" string="Control RR.SS.">
-                    <!-- <xpath expr="//notebook/page[@name='smmonitor_page']" position="inside">
+                    <xpath expr="//notebook/page[@name='smmonitor_page']" position="inside">
                         <group string="Tipo de Post y Hashtags asociados" col="2">
                             <field name="smmonitor_hashtag_ids" 
                                    widget="many2many_tags" 
@@ -165,9 +165,6 @@
                                     help="Copia todos los hashtags para pegarlos en las RR.SS."/>
                         </div>
                     </xpath>
-                    <xpath expr="." position="inside">
-                        <script type="module" src="/ifdw_social_media_monitoring/static/src/js/smmonitor_copy_hashtags.js"></script>
-                    </xpath> -->
                     <group string="Registros para el análisis" col="2">
                         <group>
                             <field name="temp_datetakesdata" string="Fecha de registro" help="Introducir el día en formato dd/mm/aaaa con la que se relacionan los datos de la lectura que deseas introducir teniendo en cuenta los datos que muestras en la plataforma que estes usando. IMPORTANTE: El día no puede ser posterior a hoy, y no más antiguo de un año contanto desde hoy."/>
@@ -533,16 +530,16 @@
               sequence="2"/>
 
     <!-- Acción de ventana específica para las hashtags de RR.SS. -->
-    <!-- <record id="action_project_hashtags_smmonitor" model="ir.actions.act_window">
+    <record id="action_project_hashtags_smmonitor" model="ir.actions.act_window">
         <field name="name">Hashtags de RR.SS.</field>
         <field name="res_model">project.task.hashtags.smmonitor</field>
         <field name="view_mode">tree,form</field>
-    </record> -->
+    </record>
     
     <!-- Elemento de menú para acceder a las hashtags de RR.SS. -->
-    <!-- <menuitem id="menu_project_hashtags_smmonitor"
+    <menuitem id="menu_project_hashtags_smmonitor"
             name="Hashtags de RR.SS."
             parent="project.menu_project_config"
             action="action_project_hashtags_smmonitor"
-            sequence="10"/> -->
+            sequence="10"/>
 </odoo>
