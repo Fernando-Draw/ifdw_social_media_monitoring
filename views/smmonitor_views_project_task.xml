@@ -211,19 +211,6 @@
             </xpath>
         </field>
     </record>
-
-    <!-- Vista kanban heredada para hashtags -->
-    <!-- <record id="view_task_hashtag_kanban_inherit" model="ir.ui.view">
-        <field name="name">project.task.kanban.hashtags.smmonitor</field>
-        <field name="model">project.task.hashtags.smmonitor</field>
-        <field name="inherit_id" ref="project.view_tag_kanban"/>
-        <field name="arch" type="xml">
-             Modificamos el título en la vista kanban
-            <xpath expr="//field[@name='name']" position="attributes">
-                <attribute name="string">Hashtag</attribute>
-            </xpath>
-        </field>
-    </record> -->
     
     <!-- Vista de lista/árbol heredada para hashtags -->
     <record id="view_task_hashtag_tree" model="ir.ui.view">

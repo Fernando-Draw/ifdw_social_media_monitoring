@@ -1,25 +1,32 @@
 from odoo import models, fields, api, exceptions
 from odoo.exceptions import ValidationError
 from random import randint
+import re
 
 class SmmonitorProjectTaskHashtags(models.Model):
 
     _name = 'project.task.hashtags.smmonitor'
     _description = 'Hashtags de Tareas de Social Media Monitoring'
     
-    name = fields.Char('Hashtag', required=True, store=True, size=300)
+    name = fields.Char('Hashtag', required=True, store=True, size=300,
+                       help="""Escribe el hashtag tal como quieres que se vea en las RR.SS. sin el símbolo de '#', se admiten tildes,
+                       no se admiten espacios, no se admiten puntuaciones, no se admiten símbolos.""")
     color = fields.Integer(string='Color', default=lambda self: randint(1, 11),
-                           help="Color asociado a este hashtag.")
+                           help="Puedes cambiar el color asociado a este hashtag.")
 
     _sql_constraints = [
         ('name_uniq', 'unique (name)', "Un hashtag con el mismo nombre ya existe."),
     ]
 
     @api.constrains('name')
-    def _check_hashtag_length(self):
+    def check_hashtag(self):
         for record in self:
             if len(record.name) > 300:
-                raise exceptions.ValidationError("El hashtag no puede tener más de 300 caracteres.")
+                raise ValidationError("El hashtag no puede tener más de 300 caracteres.")
+            if ' ' in record.name:
+                raise ValidationError("El hashtag no puede contener espacios.")
+            if not re.match(r'^[a-zA-Z0-9áéíóúÁÉÍÓÚüÜñÑ]+$', record.name):
+                raise ValidationError("El hashtag solo puede contener letras (con o sin acentos), números y la letra 'ñ'.")
 
     @api.model
     def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
