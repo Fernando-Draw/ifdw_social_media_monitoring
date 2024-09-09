@@ -1,9 +1,9 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from odoo.http import request
-#from .smmonitor_model_project_task_hashtags import SmmonitorProjectTaskHashtags
 from datetime import datetime, timedelta
 from pytz import timezone
+from odoo.addons.web.controllers.main import ReportController
 
 class SmmonitorTaskAnalytics(models.Model):
     _name = 'project.task.smmonitor'
@@ -121,8 +121,8 @@ class SmmonitorProjectTask(models.Model):
     # Método para generar hashtags en el formato adecuado
     def action_copy_hashtags(self):
         self.ensure_one()
-        hashtags = self.smmonitor_hashtag_ids.mapped('name')
-        hashtag_text = '\n'.join(['#' + tag for tag in hashtags])
+        hashtags = [f'#{tag.name}' for tag in self.smmonitor_hashtag_ids]
+        hashtag_text = '\n'.join(hashtags)
         return {
             'type': 'ir.actions.client',
             'tag': 'copy_hashtags_action',
