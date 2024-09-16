@@ -93,6 +93,10 @@ class SmmonitorProjectTask(models.Model):
 
     smmonitor_tabs = fields.One2many('project.task.smmonitor', 'smmonitor_task_id', string='Titulo/Publicación')
     smmonitor_hashtag_ids = fields.Many2many('project.task.hashtags.smmonitor', string='Hashtags RR.SS.')
+    smmonitor_analytics_ids = fields.One2many('project.task.analytics.smmonitor', 'smmonitor_analytics_task_id', string='Datos Analíticos')
+    post_type = fields.Selection([('image', 'Imágen'), ('carrucel', 'Carrucel'), ('short video', 'Video Corto'),
+                                  ('long video', 'Video Largo'), ('history 24h', 'Historía 24h')], string='Tipo de publicación', default='history 24h')
+    ab_test = fields.Selection([('no', 'No'), ('yes', 'Sí')], string='Prueba A/B', default='no')
     temp_datetakesdata = fields.Date(string='Fecha de registro', default=fields.Date.context_today)
     temp_interactions = fields.Integer(string='Interacciones (CTR)', default=0)
     temp_reach = fields.Integer(string='Alcance', default=0)
@@ -431,5 +435,60 @@ class SmmonitorProject(models.Model):
         selection=[('100', '100'), ('1000', '1000'), ('10000', '10000')],
         string='Normalización de Vinculación',
         default='100',
-        help="Selecciona el valor adecuado para ajustar y normalizar el cálculo de la Vinculación (Engagement), en base a la cantidad de seguidores que existan en la red social que vas a gestionar con este proyecto."
+        help="""Selecciona el valor adecuado para ajustar y normalizar el cálculo de la Vinculación (Engagement),
+                en base a la cantidad de seguidores que existan en la red social que vas a gestionar con este proyecto."""
     )
+
+class SmmonitorTaskAnalyticsViews(models.Model):
+    _name = 'project.task.analytics.smmonitor'
+    _description = 'Datos analíticos de medias ponderadas de las mediciones tomadas'
+
+    smmonitor_analytics_task_id = fields.Many2one('project.task', string='Título', required=True, ondelete='cascade')
+    sequence = fields.Integer(store=True, string='Secuencia')
+    analitics_average_type = fields.Char(string='Tipo de Medición')
+    taverage_engagement = fields.Float(store=True, string='Vinculación')
+    taverage_interactions = fields.Float(store=True, string='Interacciones')
+    taverage_reach = fields.Float(store=True, string='Alcance')
+    taverage_impressions = fields.Float(store=True, string='Impresiones')
+
+    @api.model
+    def create_analytics_views(self):
+        analytics_averages_periods = []
+        for task in self.env['project.task'].search([]):
+            # Manejo de firstdata y latestdata
+            for analitics_average_type in ['firstdata', 'latestdata']:
+                for value_type in ['engagement', 'interactions', 'reach', 'impressions']:
+                    value = getattr(task, f'{analitics_average_type}_{value_type}', 0.0)
+                    sequence = 0 if analitics_average_type == 'firstdata' else 9
+                    analytics_averages_periods.append({
+                        'smmonitor_analytics_task_id': task.id,
+                        'analitics_average_type': analitics_average_type,
+                        'taverage_engagement': value if value_type == 'engagement' else 0.0,
+                        'taverage_interactions': value if value_type == 'interactions' else 0.0,
+                        'taverage_reach': value if value_type == 'reach' else 0.0,
+                        'taverage_impressions': value if value_type == 'impressions' else 0.0,
+                        'sequence': sequence
+                    })
+            
+            # Manejo de los promedios taverage0X
+            for i in range(1, 9):
+                for value_type in ['engagement', 'interactions', 'reach', 'impressions']:
+                    value = getattr(task, f'taverage0{i}_{value_type}', 0.0)
+                    analytics_averages_periods.append({
+                        'smmonitor_analytics_task_id': task.id,
+                        'analitics_average_type': f'taverage0{i}',
+                        'taverage_engagement': value if value_type == 'engagement' else 0.0,
+                        'taverage_interactions': value if value_type == 'interactions' else 0.0,
+                        'taverage_reach': value if value_type == 'reach' else 0.0,
+                        'taverage_impressions': value if value_type == 'impressions' else 0.0,
+                        'sequence': i
+                    })
+
+        # Crear las entradas en project.task.analytics.smmonitor
+        self.env['project.task.analytics.smmonitor'].create(analytics_averages_periods)
+
+    @api.model
+    def create(self, vals):
+        if vals.get('sequence'):
+            vals['sequence'] = int(vals['sequence'])
+        return super(SmmonitorTaskAnalyticsViews, self).create(vals)

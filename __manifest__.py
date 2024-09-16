@@ -29,6 +29,7 @@
         'web.assets_backend': [
             '/ifdw_social_media_monitoring/static/src/js/timezone_detector.js',
             '/ifdw_social_media_monitoring/static/src/js/smmonitor_copy_hashtags.js',
+            '/ifdw_social_media_monitoring/static/src/css/smmonitor_views_project_task.css',
         ],
     },
     'license': 'LGPL-3',
