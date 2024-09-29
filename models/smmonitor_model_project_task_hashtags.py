@@ -4,8 +4,7 @@ from random import randint
 import re
 
 class SmmonitorProjectTaskHashtags(models.Model):
-
-    _name = 'project.task.hashtags.smmonitor'
+    _name = 'smm.task.hashtags'
     _description = 'Hashtags de Tareas de Social Media Monitoring'
     
     name = fields.Char('Hashtag', required=True, store=True, size=300,
@@ -13,6 +12,7 @@ class SmmonitorProjectTaskHashtags(models.Model):
                        no se admiten espacios, no se admiten puntuaciones, no se admiten símbolos.""")
     color = fields.Integer(string='Color', default=lambda self: randint(1, 11),
                            help="Puedes cambiar el color asociado a este hashtag.")
+    task_ids = fields.Many2many('project.task', string='Tareas')
 
     _sql_constraints = [
         ('name_uniq', 'unique (name)', "Un hashtag con el mismo nombre ya existe."),
@@ -30,9 +30,9 @@ class SmmonitorProjectTaskHashtags(models.Model):
 
     @api.model
     def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
-        if 'smmonitor_hashtag_ids' in self.env.context:
+        if 'smm_hashtag_task_ids' in self.env.context:
             hashtag_ids = self._name_search('')
-            domain = ['&', ('id', 'in', hashtag_ids), ('id', 'in', self.env.context['smmonitor_hashtag_ids'])]
+            domain = ['&', ('id', 'in', hashtag_ids), ('id', 'in', self.env.context['smm_hashtag_task_ids'])]
             return self.arrange_hashtag_list_by_id(super().search_read(domain=domain, fields=fields, offset=offset, limit=limit), hashtag_ids)
         return super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
     

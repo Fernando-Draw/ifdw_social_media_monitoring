@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de búsqueda para filtrado de búsqueda de smm.task.measure.analytics -->
+    <record id="view_task_analytics_search_actual_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.analytics.search.atual.smmonitor</field>
+        <field name="model">smm.task.measure.analytics</field>
+        <field name="arch" type="xml">
+            <search string="Tareas P.R.S.">
+                <!-- Campos importados y heredados en el modelo smm.task.measure.analytics de project.task para su usu aquí -->
+                <field name="name" string="Tareas" filter_domain="['|', ('name', 'ilike', self), ('id', 'ilike', self)]"/>
+                <field name="user_ids" filter_domain="[('user_ids.name', 'ilike', self), ('user_ids.active', 'in', [True, False])]"/>
+                <field name="stage_id"/>
+                <field name="milestone_id" groups="project.group_project_milestone"/>
+                <field name="partner_id" operator="child_of"/>
+                <!-- Campos principales del módulo IfDw Social Media Monitoring -->
+                <field name="smm_measuretask_id"/>
+                <field name="datetakesdata"/>
+                <field name="firstdata_datetakesdata"/>
+                <field name="latestdata_datetakesdata"/>
+                
+
+                <!-- Filtros y agrupaciones -->
+                <filter string="Seguida" name="followed_by_me" domain="[('message_is_follower', '=', True)]"/>
+                <filter string="No asignado" name="unassigned" domain="[('user_ids', '=', False)]"/>
+                <separator/>
+                <filter string="Tareas favoritas" name="starred_tasks" domain="[('priority', '=', '1')]"/>
+                <separator/>
+                <filter string="Última actualización de la etapa" name="date_last_stage_update" date="date_last_stage_update"/>
+                <separator/>
+                <filter string="Tareas abiertas" name="open_tasks" domain="[('state', 'in', ['01_in_progress', '02_changes_requested', '03_approved', '04_waiting_normal'])]"/>
+                <filter string="Tareas cerradas" name="closed_tasks" domain="[('state', 'in', ['1_done','1_canceled'])]"/>
+                <filter string="Cerrado en" name="closed_on" domain="[('state', 'in', ['1_done','1_canceled'])]" date="date_last_stage_update"/>
+                <separator/>
+                <filter string="Archivado" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Tareas con registros de RR.SS." name="datetakesdata_enabled" domain="[('datetakesdata', '!=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Titulo" name="title" context="{'group_by': 'smm_measuretask_id'}"/>
+                    <filter string="Etapas" name="stage" context="{'group_by': 'stage_id'}"/>
+                    <filter string="Hitos" name="milestone" context="{'group_by': 'milestone_id'}" groups="project.group_project_milestone"/>
+                    <filter string="Clientes" name="customer" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Compañias" name="company_id" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                    <filter string="Fecha de creación" name="create_date" context="{'group_by': 'create_date'}"/>
+                    <filter string="Fecha de asignación" name="date_assign" context="{'group_by': 'date_assign'}"/>
+                    <filter string="Última actualización de la etapa" name="last_stage_update" context="{'group_by': 'date_last_stage_update'}"/>
+                </group>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Primer registro RR.SS." name="first_record_rrss" context="{'group_by': 'firstdata_datetakesdata'}"/>
+                    <filter string="Ultimo registro RR.SS." name="latest_record_rrss" context="{'group_by': 'latestdata_datetakesdata'}"/>
+                    <!-- <filter string="Vinculación (Egagmt)" name="engagement" context="{'group_by': '*engagement*'}"/>
+                    <filter string="Interacciones (CTR)" name="interactions" context="{'group_by': '*interactions*'}"/>
+                    <filter string="Alcance" name="reach" context="{'group_by': '*reach*'}"/>
+                    <filter string="Impresiones" name="impressions" context="{'group_by': '*impressions*'}"/> -->
+                </group>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Por secuencia" name="sequence" context="{'group_by': 'sequence'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vista de lista/árbol de medias ponderadas para tarea actual -->
+    <record id="view_project_task_analytics_tree_smmonitor" model="ir.ui.view">
+        <field name="name">project.tasks.analytics.tree.smmonitor</field>
+        <field name="model">smm.task.measure.analytics</field>
+        <field name="arch" type="xml">
+            <tree string="Tareas P.R.S." editable="top">
+                <field name="smm_measuretask_id"/>
+                <field name="sequence"/>
+                <field name="analytics_average_type" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de gráfico de medias ponderadas para tarea actual -->
+    <record id="view_project_task_analytics_graph_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.analytics.graph.smmonitor</field>
+        <field name="model">smm.task.measure.analytics</field>
+        <field name="arch" type="xml">
+            <graph string="Tareas P.R.S.">
+                <field name="sequence" type="row"/>
+                <field name="smm_measuretask_id" type="col"/>
+                <field name="analytics_average_type" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Vista de tabla dinamica de medias ponderadas para tarea actual -->
+    <record id="view_project_task_analytics_pivot_smmonitor" model="ir.ui.view">
+        <field name="name">project.task.analytics.pivot.smmonitor</field>
+        <field name="model">smm.task.measure.analytics</field>
+        <field name="arch" type="xml">
+            <pivot string="Tareas P.R.S.">
+                <field name="smm_measuretask_id" type="row"/>
+                <field name="sequence" type="row"/>
+                <field name="analytics_average_type" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+</odoo>

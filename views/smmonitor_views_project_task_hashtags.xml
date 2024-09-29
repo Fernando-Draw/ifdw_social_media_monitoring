@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista de lista/árbol heredada para hashtags -->
+    <record id="view_task_hashtag_tree" model="ir.ui.view">
+        <field name="name">project.task.hashtags.tree.smmonitor</field>
+        <field name="model">smm.task.hashtags</field>
+        <field name="arch" type="xml">
+            <tree string="Hashtags" editable="top" multi_edit="1" default_order="name">
+                <field name="name" string="Hashtags RR.SS."/>
+                <field name="color" widget="color_picker" string="Color"/>
+            </tree>
+        </field>
+    </record>
+    
+    <!-- Acción de ventana específica para las hashtags de RR.SS. -->
+    <record id="action_project_hashtags_smmonitor" model="ir.actions.act_window">
+        <field name="name">Hashtags de RR.SS.</field>
+        <field name="res_model">smm.task.hashtags</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
