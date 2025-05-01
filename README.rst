@@ -33,7 +33,7 @@ De momento no hay seguimiento de rastreo de errores.
 
 Mantenedor
 ==========
-.. image:: https://cloud.infinitydraw.es/files/index.php/s/Rc9xpN3k6mGbtjD
+.. image:: https://cloud.infinitydraw.es/files/index.php/s/Rc9xpN3k6mGbtjD/download
    :target: https://infinitydraw.es
 
 Este módulo es mantenido por Infinity Draw.
