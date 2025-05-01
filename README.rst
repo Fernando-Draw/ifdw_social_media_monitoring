@@ -33,7 +33,7 @@ De momento no hay seguimiento de rastreo de errores.
 
 Mantenedor
 ==========
-.. image:: https://infinitydraw.es/wp-content/uploads/2023/06/FabIcon-Nuevo-con-fondo-blanco-circular-1028x1028-1.png
+.. image:: https://cloud.infinitydraw.es/files/index.php/s/Rc9xpN3k6mGbtjD
    :target: https://infinitydraw.es
 
 Este módulo es mantenido por Infinity Draw.
